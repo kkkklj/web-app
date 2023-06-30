@@ -67,7 +67,7 @@ export const getStaticProps:GetStaticProps = async (context) => {
   // console.log('context.post',getPost(slug))
   // const { slug } = context.params as Iparams;
   const postRelativePath = getMdxPostPath(slug)
-  const { path } = getPost(slug);
+  // const { path } = getPost(slug);
   // const {path} = context.params?.slug ?  getPost(context.params.slug.join('/')) : {path:''} 
   console.log('getStaticProps')
   return {

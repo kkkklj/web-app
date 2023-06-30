@@ -2,7 +2,7 @@
 
 echo '转移指定目录下文件进程启动'
 originPath=/c/Users/BDA/Desktop/github/cloud/Basics/
-targetPath=/c/Users/BDA/Desktop/project/test2/web-app/test/
+targetPath="$(pwd)/_posts/"
 #复制的文件类型
 matchType=("*.png" "*.md" "*.awebp" "*.jpg")
 #添加目录

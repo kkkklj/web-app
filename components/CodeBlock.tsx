@@ -14,7 +14,7 @@ const GroceryItem: React.FC<GroceryItemProps> = ({ item }) => {
 `
 const CodBlock = (props:TypeProps) => {
   const {children,code, className} = props
-  const language = className.replace(/language-/, '')
+  const language = className?.replace(/language-/, '') || 'txt'
   console.log('className',className,code,props)
   // return (<pre style={{color: 'tomato'}} {...props} />)
   // if(!code) {

@@ -3,10 +3,16 @@
 import { useMDXComponents } from '@mdx-js/react';
 import { Components, MDXProvider } from '@mdx-js/react/lib';
 import CodBlock from '@/components/CodeBlock';
-import { getAllPosts, getMdxPostPath, getPost } from '@/utils/mdxUtils';
+import {  getMdxPostPath } from '@/utils/mdxUtils';
 import { GetServerSideProps, GetStaticPaths, GetStaticProps } from "next"
 import dynamic from 'next/dynamic'
 import Hello from '@/components/hello';
+import Wrapper from '@/components/post/Wrapper';
+import { FilesPaths } from '@/server/files';
+import { getDirTreeInit } from '@/server/posts/getTree';
+// import Directory from "@/components/Directory"
+//a function that chose one
+function choseOne() {}
 const mdxComp:Components = {
   pre: (props:any) => {
       console.log('props',props)
@@ -18,20 +24,11 @@ const mdxComp:Components = {
     return <>1111</>
   },
   title:() => <>33333</>,
-  // h1:() => <>66666</>,
-  wrapper: props => {
-    console.log('wrapper',props)
-    return (
-      <div style={{padding: '20px', backgroundColor: 'tomato'}}>
-        <main {...props} />
-      </div>
-    )
-  }
-  // wrapper: ({ children }) => <>{children}</>,
-  // code: CodBlock
+  wrapper: Wrapper
 }
-export default function Home({path}:{path:string}) {
-  console.log('mdx-->',path)
+export default function Home(props:{path:string}) {
+  const {path} = props
+  console.log('mdx-->',props)
   const DynamicComponent = dynamic(() => import('@/_posts/'+path))
   const comp = useMDXComponents(mdxComp)
   
@@ -39,6 +36,7 @@ export default function Home({path}:{path:string}) {
   // console.log('mdx-->',path&& await import(path))
   return (
     <>
+    {/* <Directory></Directory> */}
     <Hello></Hello>
       <MDXProvider components={comp}>
         {/* <ButtonMdx/> */}
@@ -56,6 +54,7 @@ export default function Home({path}:{path:string}) {
  * @remark 也就是和 getServerSideProps 行为基本一致，刚上手时很容易对这里感到困惑。 
  */
 export const getStaticProps:GetStaticProps = async (context) => {
+ 
   if(!context.params?.slug || !(context.params.slug instanceof Array)) {
     return {
       props:{
@@ -64,31 +63,35 @@ export const getStaticProps:GetStaticProps = async (context) => {
     }
   }
   const slug = context.params.slug.join('/')
-  // console.log('context.post',getPost(slug))
-  // const { slug } = context.params as Iparams;
   const postRelativePath = getMdxPostPath(slug)
-  // const { path } = getPost(slug);
-  // const {path} = context.params?.slug ?  getPost(context.params.slug.join('/')) : {path:''} 
-  console.log('getStaticProps')
+  const treeObj = getDirTreeInit()?.treeObj;
+  console.log('getStaticProps',slug)
+
   return {
     props:{
-      path:postRelativePath
+      path:postRelativePath,
+      files:treeObj
     }
   }
 }
-export const getStaticPaths: GetStaticPaths = () => {
+
+export const getStaticPaths: GetStaticPaths = (params) => {
   //only get the slug from posts 
-  const posts = getAllPosts(['slug']);
-  
-  // map through to return post paths
-  const paths = posts.map((post) => ({
+  const {staticPaths} = getDirTreeInit()
+  const paths = [
+    {
       params: {
-          slug: post.slug
+        slug:['typescript','README']
       }
-  }));
-  console.log('getStaticPaths-->',posts,paths,paths.length)
+    },
+  ]
+  // const paths = []
+  console.log('getStaticPaths-->',staticPaths.map(item => item.params.slug),paths.length)
   return {
-      paths,
-      fallback: false
+      paths:staticPaths,
+      fallback: false,
+      // files
   }
 }
+//1850/867
+//2.1337946943483277

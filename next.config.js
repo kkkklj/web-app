@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const webpack = require('webpack');
+const { codeblocks } = require('remark-code-blocks')
 const nextConfig = {
   webpack: (config) => {
     // console.log(config.target);
@@ -14,8 +15,13 @@ const nextConfig = {
 const withMDX = require('@next/mdx')({
   extension: /\.mdx?$/,
   options: {
-    remarkPlugins: [],
-    rehypePlugins: [],
+    remarkPlugins: [codeblocks],
+    rehypePlugins: [
+      function(inp,...seting) {
+        console.log('-->',inp,seting)
+        return inp
+      }
+    ],
   },
 })
 // module.exports = nextConfig

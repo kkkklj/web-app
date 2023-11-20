@@ -10,11 +10,31 @@ import Hello from '@/components/hello';
 import Wrapper from '@/components/post/Wrapper';
 import { FilesPaths, readMdxFileToString } from '@/server/files';
 import { getDirTreeInit } from '@/server/posts/getTree';
-
-import {compile} from '@mdx-js/mdx'
+import React, { createElement } from 'react'
+import {compile,compileSync,evaluateSync,run, runSync } from '@mdx-js/mdx'
 import remarkMdx from 'remark-mdx';
 import rehypeRaw from 'rehype-raw';
 import rehypeStringify from 'rehype-stringify';
+import { useEffect, useState,Fragment } from 'react';
+import * as provider from '@mdx-js/react'
+import * as runtime from 'react/jsx-runtime'
+import * as devRuntime from "react/jsx-dev-runtime";
+import {codeblocks} from "remark-code-blocks"
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import rehypeParse from 'rehype-parse'
+import rehypeReact from 'rehype-react'
+import remarkRehype from 'remark-rehype'
+import remarkStringify from 'remark-stringify';
+
+// import remarkToReact from 'remark-react';
+import vm from "vm"
+const mdxText = `
+# Hello, world!
+
+This is an MDX document.
+
+`;
 // import { mdxHastToJsx } from '@mdx-js/mdx/mdx-hast-to-jsx'
 // import Directory from "@/components/Directory"
 //a function that chose one
@@ -34,30 +54,60 @@ const mdxComp:Components = {
       return <div {...props} />
   },
   code: CodBlock,
-  // prerequisites:(prop:any) => {
-  //   console.log('prerequisites',prop)
-  //   return <>1111</>
-  // },
   title:() => <>33333</>,
   wrapper: Wrapper
 }
-export default function Home(props:{path:string}) {
-  const {path} = props
+export default function Home(props:{path:string,fileString:string}) {
+  const {path,fileString} = props
   console.log('mdx-->',props)
-  const DynamicComponent = dynamic(() => import('@/_posts/'+path))
-  console.log('DynamicComponent',DynamicComponent,DynamicComponent.defaultProps)
+  console.log('codeBlock',codeblocks)
+  const MDXContent  = compileSync(fileString,{
+    jsx:true,
+    jsxRuntime:"automatic"
+  })
   
   const comp = useMDXComponents(mdxComp)
+  const options:any = {
+    // ...provider,
+    ...devRuntime,
+    ...runtime,
+    
+    // Fragment:Symbol(React.fragment),
+    
+    development:true
+  }
+  const func = options.jsxDEV
+  // options.jsxDEV = (prop,val,s) => {
+  //   func(prop,val,s)
+  // }
+  const MdxComponent = evaluateSync(fileString,{
+    ...options,
+    
+  }).default
   
+  console.log('MdxComponent',MdxComponent({}),Hello(),MDXContent,options.Fragment,devRuntime.Fragment)
   
-  // console.log('mdx-->',path&& await import(path))
+  // const runContent = runSync(MDXContent,runtime)
+  console.log('runContent',MDXContent,MDXContent.result)
+  const Cp = unified()
+  .use(remarkParse)
+  .use(remarkStringify)
+  .use(remarkRehype)
+  
+  // .use(rehypeParse, {fragment: true})
+  .use(rehypeReact, {createElement, Fragment})
+  .processSync(MDXContent).result
+  console.log('Cp',Cp)
   return (
     <>
     {/* <Directory></Directory> */}
     <Hello></Hello>
+    
+    {/* <MDXContent></MDXContent> */}
       <MDXProvider components={comp} >
-        {/* <ButtonMdx/> */}
-        <DynamicComponent></DynamicComponent>
+        {/* <MdxComponent/> */}
+        {/* {Cp} */}
+        {/* <Cp></Cp> */}
       </MDXProvider>
     </>
   )
@@ -84,11 +134,13 @@ export const getStaticProps:GetStaticProps = async (context) => {
   const treeObj = getDirTreeInit()?.treeObj;
   // console.log('getStaticProps',slug)
   // console.log('file-->',)
-  readMdxFileToString('/_posts/'+postRelativePath)
+  const fileString = readMdxFileToString('/_posts/'+postRelativePath)
   return {
     props:{
       path:postRelativePath,
-      files:treeObj
+      fileString,
+      files:treeObj,
+      // MdxComponent
     }
   }
 }
